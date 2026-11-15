@@ -1,0 +1,76 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Laporan{% endblock %}
+{% block content %}
+<h1>Laporan Inventaris</h1>
+
+<div class="stat-card">
+    <span>Total pengeluaran yang tercatat</span>
+    <strong>Rp {{ "{:,.0f}".format(total_pengeluaran) }}</strong>
+</div>
+
+<h2>Ringkasan Stok</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Barang</th><th>Kategori</th><th>Stok</th><th>Minimum</th><th>Status</th></tr></thead>
+<tbody>
+{% for b in barang %}
+<tr>
+    <td>{{ b.nama }}</td>
+    <td>{{ b.kategori }}</td>
+    <td>{{ b.stok }} {{ b.satuan }}</td>
+    <td>{{ b.stok_minimum }}</td>
+    <td>
+        {% if b.tidak_dipesan_lagi %}Tidak dipesan lagi
+        {% elif b.stok == 0 %}Habis
+        {% elif b.stok <= b.stok_minimum %}Menipis
+        {% else %}Tersedia{% endif %}
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="5">Belum ada data barang.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<h2>Riwayat Transaksi</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Tanggal</th><th>Barang</th><th>Jenis</th><th>Jumlah</th><th>Pencatat</th></tr></thead>
+<tbody>
+{% for t in transaksi %}
+<tr>
+    <td>{{ t.tanggal.strftime("%d-%m-%Y") }}</td>
+    <td>{{ t.barang.nama }}</td>
+    <td>{{ t.jenis|title }}</td>
+    <td>{{ t.jumlah }} {{ t.barang.satuan }}</td>
+    <td>{{ t.pengguna.nama }}</td>
+</tr>
+{% else %}
+<tr><td colspan="5">Belum ada transaksi.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<h2>Riwayat Pengeluaran</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Tanggal</th><th>Barang</th><th>Jumlah</th><th>Total</th><th>Keterangan</th></tr></thead>
+<tbody>
+{% for p in pengeluaran %}
+<tr>
+    <td>{{ p.tanggal.strftime("%d-%m-%Y") }}</td>
+    <td>{{ p.barang.nama }}</td>
+    <td>{{ p.jumlah }} {{ p.barang.satuan }}</td>
+    <td>Rp {{ "{:,.0f}".format(p.total) }}</td>
+    <td>{{ p.keterangan }}</td>
+</tr>
+{% else %}
+<tr><td colspan="5">Belum ada pengeluaran.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

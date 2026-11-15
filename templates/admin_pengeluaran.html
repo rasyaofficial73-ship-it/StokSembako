@@ -1,0 +1,51 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Pengeluaran{% endblock %}
+{% block content %}
+<h1>Pengeluaran Pembelian</h1>
+
+<form class="form-card" method="POST">
+    <label>Barang yang dibeli</label>
+    <select name="barang_id" required>
+        <option value="">-- Pilih barang --</option>
+        {% for b in daftar_barang %}
+        <option value="{{ b.id }}">{{ b.nama }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Jumlah dibeli</label>
+    <input type="number" name="jumlah" min="1" required>
+
+    <label>Harga beli per satuan (Rupiah)</label>
+    <input type="number" name="harga_satuan" min="0" step="0.01" required>
+
+    <label>Tanggal pembelian</label>
+    <input type="date" name="tanggal" required>
+
+    <label>Keterangan atau nama pemasok</label>
+    <input name="keterangan" placeholder="Contoh: pembelian dari pemasok">
+
+    <button type="submit">Simpan Pembelian</button>
+</form>
+
+<h2>Riwayat Pengeluaran</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Tanggal</th><th>Barang</th><th>Jumlah</th><th>Harga Satuan</th><th>Total</th><th>Keterangan</th></tr></thead>
+<tbody>
+{% for p in riwayat %}
+<tr>
+    <td>{{ p.tanggal.strftime("%d-%m-%Y") }}</td>
+    <td>{{ p.barang.nama }}</td>
+    <td>{{ p.jumlah }} {{ p.barang.satuan }}</td>
+    <td>Rp {{ "{:,.0f}".format(p.harga_satuan) }}</td>
+    <td>Rp {{ "{:,.0f}".format(p.total) }}</td>
+    <td>{{ p.keterangan }}</td>
+</tr>
+{% else %}
+<tr><td colspan="6">Belum ada catatan pengeluaran.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

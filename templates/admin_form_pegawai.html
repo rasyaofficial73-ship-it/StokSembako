@@ -1,0 +1,20 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Tambah Pegawai{% endblock %}
+{% block content %}
+<h1>Buat Akun Pegawai</h1>
+
+<form class="form-card" method="POST">
+    <label>Nama lengkap</label>
+    <input name="nama" required>
+
+    <label>Username</label>
+    <input name="username" required autocomplete="off">
+
+    <label>Kata sandi sementara (minimal 8 karakter)</label>
+    <input type="password" name="password" minlength="8" required autocomplete="new-password">
+
+    <button type="submit">Buat Akun</button>
+    <a href="{{ url_for('admin_pegawai') }}">Batal</a>
+</form>
+{% endblock %}

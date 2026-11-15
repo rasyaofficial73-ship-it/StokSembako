@@ -1,0 +1,35 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Form Barang{% endblock %}
+{% block content %}
+<h1>{{ "Edit Barang" if barang else "Tambah Barang" }}</h1>
+
+<form class="form-card" method="POST">
+    <label>Nama barang</label>
+    <input name="nama" required value="{{ barang.nama if barang else '' }}">
+
+    <label>Kategori</label>
+    <input name="kategori" value="{{ barang.kategori if barang else 'Sembako' }}">
+
+    <label>Satuan (kg, liter, pcs, dus, dll.)</label>
+    <input name="satuan" required value="{{ barang.satuan if barang else 'pcs' }}">
+
+    <label>Jumlah stok saat ini</label>
+    <input type="number" name="stok" min="0" required value="{{ barang.stok if barang else 0 }}">
+
+    <label>Batas stok minimum</label>
+    <input type="number" name="stok_minimum" min="0" required value="{{ barang.stok_minimum if barang else 5 }}">
+
+    <label>Harga beli per satuan (Rupiah)</label>
+    <input type="number" name="harga_beli" min="0" step="0.01" required value="{{ barang.harga_beli if barang else 0 }}">
+
+    <label class="check-label">
+        <input type="checkbox" name="tidak_dipesan_lagi"
+        {% if barang and barang.tidak_dipesan_lagi %}checked{% endif %}>
+        Barang tidak dipesan atau diproduksi lagi
+    </label>
+
+    <button type="submit">Simpan Barang</button>
+    <a href="{{ url_for('admin_barang') }}">Batal</a>
+</form>
+{% endblock %}

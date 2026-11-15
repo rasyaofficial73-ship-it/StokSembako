@@ -1,0 +1,52 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Data Barang{% endblock %}
+{% block content %}
+<h1>Manajemen Barang</h1>
+
+<div class="toolbar">
+    <form method="GET">
+        <input name="q" placeholder="Cari nama barang..." value="{{ request.args.get('q', '') }}">
+        <button type="submit">Cari</button>
+    </form>
+    <a class="button" href="{{ url_for('admin_form_barang') }}">+ Tambah Barang</a>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Nama</th><th>Kategori</th><th>Stok</th><th>Harga Beli</th><th>Status</th><th>Aksi</th></tr>
+</thead>
+<tbody>
+{% for b in barang %}
+<tr>
+    <td>{{ b.nama }}</td>
+    <td>{{ b.kategori }}</td>
+    <td>{{ b.stok }} {{ b.satuan }}</td>
+    <td>Rp {{ "{:,.0f}".format(b.harga_beli) }}</td>
+    <td>
+        {% if b.tidak_dipesan_lagi %}
+            Tidak dipesan lagi
+        {% elif b.stok == 0 %}
+            <span class="status-danger">Stok habis</span>
+        {% elif b.stok <= b.stok_minimum %}
+            <span class="status-warning">Stok menipis</span>
+        {% else %}
+            <span class="status-ok">Tersedia</span>
+        {% endif %}
+    </td>
+    <td class="actions">
+        <a href="{{ url_for('admin_form_barang', barang_id=b.id) }}">Edit</a>
+        <form method="POST" action="{{ url_for('admin_hapus_barang', barang_id=b.id) }}"
+              onsubmit="return confirm('Yakin ingin menghapus barang ini?')">
+            <button class="danger" type="submit">Hapus</button>
+        </form>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="6">Barang belum tersedia.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

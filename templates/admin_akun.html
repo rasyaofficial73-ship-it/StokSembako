@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pengaturan Akun Admin</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+    <main class="login-card">
+        <h1>Pengaturan Akun Admin</h1>
+        <p>Ubah identitas dan kata sandi administrator.</p>
+
+        {% for category, message in
+            get_flashed_messages(with_categories=true) %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+
+        <form method="POST">
+            <label>Nama admin</label>
+            <input type="text" name="nama"
+                   value="{{ current_user.nama }}" required>
+
+            <label>Username admin</label>
+            <input type="text" name="username"
+                   value="{{ current_user.username }}" required>
+
+            <hr>
+
+            <h3>Ganti Kata Sandi</h3>
+            <p class="small">
+                Kosongkan semua kolom kata sandi jika tidak ingin menggantinya.
+            </p>
+
+            <label>Kata sandi lama</label>
+            <input type="password" name="password_lama"
+                   autocomplete="current-password">
+
+            <label>Kata sandi baru</label>
+            <input type="password" name="password_baru"
+                   minlength="8" autocomplete="new-password">
+
+            <label>Konfirmasi kata sandi baru</label>
+            <input type="password" name="konfirmasi_password"
+                   minlength="8" autocomplete="new-password">
+
+            <button type="submit">Simpan Perubahan</button>
+        </form>
+
+        <p>
+            <a href="{{ url_for('admin_dashboard') }}">
+                Kembali ke Dashboard
+            </a>
+        </p>
+    </main>
+</body>
+</html>

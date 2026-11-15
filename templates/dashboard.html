@@ -1,0 +1,44 @@
+
+{% extends "base.html" %}
+{% block title %}Dashboard | Inventaris Sembako{% endblock %}
+{% block content %}
+<h2>Dashboard {{ 'Admin' if g.user['role'] == 'admin' else 'Karyawan' }}</h2>
+<p>Selamat datang, <strong>{{ g.user['nama'] }}</strong>.</p>
+
+<div class="grid">
+    <div class="stat">Jenis Barang<strong>{{ jumlah_barang }}</strong></div>
+    <div class="stat">Total Stok<strong>{{ total_stok }}</strong></div>
+    {% if g.user['role'] == 'admin' %}
+    <div class="stat">Karyawan<strong>{{ jumlah_karyawan }}</strong></div>
+    {% endif %}
+</div>
+
+<div class="grid">
+    <a class="btn" href="{{ url_for('stok') }}">Lihat Stok Barang</a>
+    <a class="btn" href="{{ url_for('transaksi') }}">Catat Barang Masuk/Keluar</a>
+    <a class="btn" href="{{ url_for('profil') }}">Profil Saya</a>
+    {% if g.user['role'] == 'admin' %}
+    <a class="btn" href="{{ url_for('pegawai') }}">Kelola Karyawan</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Transaksi Terbaru</h3>
+    <div class="table-wrap">
+    <table>
+        <tr><th>Waktu</th><th>Barang</th><th>Jenis</th><th>Jumlah</th><th>Pengguna</th></tr>
+        {% for t in transaksi %}
+        <tr>
+            <td>{{ t['waktu'] }}</td>
+            <td>{{ t['nama_barang'] }}</td>
+            <td>{{ t['jenis']|title }}</td>
+            <td>{{ t['jumlah'] }}</td>
+            <td>{{ t['nama_user'] }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Belum ada transaksi.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+
+{% extends "base.html" %}
+{% block title %}Profil Pengguna{% endblock %}
+{% block content %}
+<h2>
+    {% if mode == 'admin' %}
+        Profil Karyawan
+    {% else %}
+        Profil Saya
+    {% endif %}
+</h2>
+
+<div class="card">
+    <p><strong>Username:</strong> {{ profil['username'] }}</p>
+    <p><strong>Peran:</strong> {{ profil['role']|title }}</p>
+    <p><strong>Status:</strong> {{ 'Aktif' if profil['aktif'] else 'Nonaktif' }}</p>
+
+    {% if mode == 'sendiri' %}
+    <form method="post">
+        <label>Nama tampilan</label>
+        <input name="nama" value="{{ profil['nama'] }}" required>
+
+        <label>Bio / Tentang saya</label>
+        <textarea name="bio" rows="4" placeholder="Ceritakan sedikit tentang diri kamu">{{ profil['bio'] }}</textarea>
+
+        <label>Password baru (kosongkan jika tidak ingin mengganti)</label>
+        <input type="password" name="password" minlength="6" autocomplete="new-password">
+
+        <button type="submit">Simpan Profil</button>
+    </form>
+    {% else %}
+    <p><strong>Bio:</strong> {{ profil['bio'] or 'Belum mengisi bio.' }}</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Riwayat Transaksi {{ 'Karyawan' if mode == 'admin' else 'Saya' }}</h3>
+    <div class="table-wrap">
+    <table>
+        <tr><th>Waktu</th><th>Barang</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th></tr>
+        {% for t in riwayat %}
+        <tr>
+            <td>{{ t['waktu'] }}</td>
+            <td>{{ t['nama_barang'] }}</td>
+            <td>{{ t['jenis']|title }}</td>
+            <td>{{ t['jumlah'] }}</td>
+            <td>{{ t['keterangan'] or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Belum ada transaksi.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+
+{% if mode == 'admin' %}
+<p><a class="btn" href="{{ url_for('pegawai') }}">Kembali ke daftar karyawan</a></p>
+{% endif %}
+{% endblock %}

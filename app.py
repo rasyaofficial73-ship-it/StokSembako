@@ -312,27 +312,52 @@ def stok():
     return render_template("stok.html", barang=daftar_barang)
 
 
+
 @app.route("/barang/hapus/<int:barang_id>", methods=["POST"])
 @admin_required
 def hapus_barang(barang_id):
     db = get_db()
 
-    riwayat = db.execute(
-        "SELECT id FROM transaksi WHERE barang_id = ? LIMIT 1",
+    # Cari barang berdasarkan ID
+    barang = db.execute(
+        "SELECT id, nama FROM barang WHERE id = ?",
         (barang_id,)
     ).fetchone()
 
-    if riwayat:
-        flash("Barang memiliki riwayat transaksi sehingga tidak bisa dihapus.", "danger")
-    else:
-        db.execute("DELETE FROM barang WHERE id = ?", (barang_id,))
-        db.commit()
-        flash("Barang berhasil dihapus.", "success")
+    if barang is None:
+        flash("Barang tidak ditemukan.", "error")
+        return redirect(url_for("stok"))
 
+    # Periksa apakah barang memiliki riwayat transaksi
+    riwayat = db.execute(
+        "SELECT COUNT(*) AS total FROM transaksi WHERE barang_id = ?",
+        (barang_id,)
+    ).fetchone()["total"]
+
+    if riwayat > 0:
+        flash(
+            f"Barang '{barang['nama']}' tidak dapat dihapus permanen "
+            "karena memiliki riwayat transaksi. "
+            "Riwayat transaksi harus tetap tersimpan.",
+            "warning"
+        )
+        return redirect(url_for("stok"))
+
+    # Hapus barang jika belum memiliki riwayat transaksi
+    db.execute(
+        "DELETE FROM barang WHERE id = ?",
+        (barang_id,)
+    )
+    db.commit()
+
+    flash("Barang berhasil dihapus.", "success")
     return redirect(url_for("stok"))
 
 
+
+
 # ---------- TRANSAKSI BARANG MASUK/KELUAR ----------
+
 
 @app.route("/transaksi", methods=["GET", "POST"])
 @login_required
@@ -343,53 +368,86 @@ def transaksi():
         try:
             barang_id = int(request.form.get("barang_id", "0"))
             jumlah = int(request.form.get("jumlah", "0"))
-            jenis = request.form.get("jenis", "")
+            jenis = request.form.get("jenis", "").strip()
+            tanggal_waktu = request.form.get("tanggal_waktu", "").strip()
             keterangan = request.form.get("keterangan", "").strip()
 
-            if jumlah <= 0 or jenis not in ("masuk", "keluar"):
-                raise ValueError
-        except ValueError:
-            flash("Pilih barang dan masukkan jumlah yang valid.", "danger")
-            return redirect(url_for("transaksi"))
+            if barang_id <= 0:
+                raise ValueError("Pilih barang terlebih dahulu.")
 
-        barang = db.execute(
-            "SELECT * FROM barang WHERE id = ?", (barang_id,)
-        ).fetchone()
+            if jumlah <= 0:
+                raise ValueError("Jumlah harus lebih dari nol.")
 
-        if barang is None:
-            flash("Barang tidak ditemukan.", "danger")
-            return redirect(url_for("transaksi"))
+            if jenis not in ("masuk", "keluar"):
+                raise ValueError("Jenis transaksi tidak valid.")
 
-        if jenis == "keluar" and barang["stok"] < jumlah:
-            flash("Stok tidak mencukupi untuk transaksi keluar.", "danger")
-            return redirect(url_for("transaksi"))
+            if not tanggal_waktu:
+                raise ValueError("Tanggal dan jam wajib diisi.")
 
-        if jenis == "masuk":
-            db.execute(
-                "UPDATE barang SET stok = stok + ? WHERE id = ?",
-                (jumlah, barang_id)
+            # Validasi tanggal dan waktu dari formulir.
+            waktu_obj = datetime.strptime(
+                tanggal_waktu, "%Y-%m-%dT%H:%M"
             )
-        else:
-            db.execute(
-                "UPDATE barang SET stok = stok - ? WHERE id = ?",
-                (jumlah, barang_id)
-            )
+            waktu_simpan = waktu_obj.strftime("%Y-%m-%d %H:%M:%S")
 
-        db.execute("""
-            INSERT INTO transaksi
-            (barang_id, user_id, jenis, jumlah, keterangan, waktu)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            barang_id,
-            g.user["id"],
-            jenis,
-            jumlah,
-            keterangan,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
+        except ValueError as e:
+            flash(str(e) or "Data transaksi tidak valid.", "danger")
+            return redirect(url_for("transaksi"))
 
-        db.commit()
-        flash("Transaksi berhasil disimpan dan stok diperbarui.", "success")
+        try:
+            # Mulai transaksi database agar perubahan stok dan riwayat
+            # tersimpan bersama-sama.
+            db.execute("BEGIN IMMEDIATE")
+
+            barang = db.execute(
+                "SELECT * FROM barang WHERE id = ?",
+                (barang_id,)
+            ).fetchone()
+
+            if barang is None:
+                raise ValueError("Barang tidak ditemukan.")
+
+            if jenis == "keluar" and barang["stok"] < jumlah:
+                raise ValueError(
+                    f"Stok {barang['nama']} tidak cukup. "
+                    f"Stok tersedia: {barang['stok']} {barang['satuan']}."
+                )
+
+            if jenis == "masuk":
+                db.execute(
+                    "UPDATE barang SET stok = stok + ? WHERE id = ?",
+                    (jumlah, barang_id)
+                )
+            else:
+                db.execute(
+                    "UPDATE barang SET stok = stok - ? WHERE id = ?",
+                    (jumlah, barang_id)
+                )
+
+            db.execute("""
+                INSERT INTO transaksi
+                (barang_id, user_id, jenis, jumlah, keterangan, waktu)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                barang_id,
+                g.user["id"],
+                jenis,
+                jumlah,
+                keterangan,
+                waktu_simpan
+            ))
+
+            db.commit()
+            flash("Transaksi berhasil disimpan dan stok diperbarui.", "success")
+
+        except ValueError as e:
+            db.rollback()
+            flash(str(e), "danger")
+
+        except sqlite3.Error:
+            db.rollback()
+            flash("Gagal menyimpan transaksi ke database.", "danger")
+
         return redirect(url_for("transaksi"))
 
     daftar_barang = db.execute(
@@ -398,27 +456,35 @@ def transaksi():
 
     if g.user["role"] == "admin":
         riwayat = db.execute("""
-            SELECT t.*, b.nama AS nama_barang, u.nama AS nama_user
+            SELECT t.*, b.nama AS nama_barang,
+                   b.satuan AS satuan_barang,
+                   u.nama AS nama_user
             FROM transaksi t
             JOIN barang b ON b.id = t.barang_id
             JOIN users u ON u.id = t.user_id
-            ORDER BY t.id DESC LIMIT 100
+            ORDER BY t.waktu DESC, t.id DESC
+            LIMIT 200
         """).fetchall()
     else:
         riwayat = db.execute("""
-            SELECT t.*, b.nama AS nama_barang, u.nama AS nama_user
+            SELECT t.*, b.nama AS nama_barang,
+                   b.satuan AS satuan_barang,
+                   u.nama AS nama_user
             FROM transaksi t
             JOIN barang b ON b.id = t.barang_id
             JOIN users u ON u.id = t.user_id
             WHERE t.user_id = ?
-            ORDER BY t.id DESC LIMIT 100
+            ORDER BY t.waktu DESC, t.id DESC
+            LIMIT 200
         """, (g.user["id"],)).fetchall()
 
     return render_template(
         "transaksi.html",
         barang=daftar_barang,
-        riwayat=riwayat
+        riwayat=riwayat,
+        sekarang=datetime.now().strftime("%Y-%m-%dT%H:%M")
     )
+
 
 
 # ---------- KELOLA AKUN KARYAWAN (ADMIN SAJA) ----------

@@ -1,0 +1,56 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Transaksi Stok{% endblock %}
+{% block content %}
+<h1>Barang Masuk dan Keluar</h1>
+
+<form class="form-card" method="POST">
+    <h2>Catat transaksi stok</h2>
+
+    <label>Pilih barang</label>
+    <select name="barang_id" required>
+        <option value="">-- Pilih barang --</option>
+        {% for b in daftar_barang %}
+        <option value="{{ b.id }}">{{ b.nama }} (stok: {{ b.stok }} {{ b.satuan }})</option>
+        {% endfor %}
+    </select>
+
+    <label>Jenis transaksi</label>
+    <select name="jenis" required>
+        <option value="masuk">Barang masuk</option>
+        <option value="keluar">Barang keluar</option>
+    </select>
+
+    <label>Jumlah</label>
+    <input type="number" name="jumlah" min="1" required>
+
+    <label>Tanggal transaksi</label>
+    <input type="date" name="tanggal" required>
+
+    <label>Keterangan</label>
+    <input name="keterangan" placeholder="Contoh: pembelian dari pemasok">
+
+    <button type="submit">Simpan Transaksi</button>
+</form>
+
+<h2>Riwayat Transaksi</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Tanggal</th><th>Barang</th><th>Jenis</th><th>Jumlah</th><th>Dicatat oleh</th><th>Keterangan</th></tr></thead>
+<tbody>
+{% for t in transaksi %}
+<tr>
+    <td>{{ t.tanggal.strftime("%d-%m-%Y") }}</td>
+    <td>{{ t.barang.nama }}</td>
+    <td>{{ t.jenis|title }}</td>
+    <td>{{ t.jumlah }} {{ t.barang.satuan }}</td>
+    <td>{{ t.pengguna.nama }}</td>
+    <td>{{ t.keterangan }}</td>
+</tr>
+{% else %}
+<tr><td colspan="6">Belum ada transaksi.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Admin{% endblock %} | Inventaris Sembako</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('admin_dashboard') }}">Inventaris Sembako</a>
+        <span>Admin: {{ current_user.nama }}</span>
+        <a class="logout" href="{{ url_for('admin_logout') }}">Keluar</a>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('admin_barang') }}">Data Barang</a>
+            <a href="{{ url_for('admin_transaksi') }}">Barang Masuk/Keluar</a>
+            <a href="{{ url_for('admin_pengeluaran') }}">Pengeluaran</a>
+            <a href="{{ url_for('admin_pegawai') }}">Data Pegawai</a>
+            <a href="{{ url_for('admin_laporan') }}">Laporan</a>
+        </aside>
+
+        <main class="main-content">
+            {% for category, message in get_flashed_messages(with_categories=true) %}
+                <div class="alert {{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

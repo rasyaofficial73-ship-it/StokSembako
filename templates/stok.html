@@ -1,0 +1,55 @@
+
+{% extends "base.html" %}
+{% block title %}Stok Barang{% endblock %}
+{% block content %}
+<h2>Stok Barang</h2>
+
+{% if g.user['role'] == 'admin' %}
+<div class="card">
+    <h3>Tambah Barang</h3>
+    <form method="post">
+        <label>Nama barang</label>
+        <input name="nama" required>
+        <label>Kategori</label>
+        <input name="kategori" value="Sembako" required>
+        <label>Stok awal</label>
+        <input type="number" name="stok" min="0" value="0" required>
+        <label>Satuan</label>
+        <input name="satuan" value="pcs" required>
+        <label>Harga per satuan (Rp)</label>
+        <input type="number" name="harga" min="0" step="0.01" value="0" required>
+        <button type="submit">Simpan Barang</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="table-wrap">
+    <table>
+        <tr>
+            <th>Nama</th><th>Kategori</th><th>Stok</th>
+            <th>Satuan</th><th>Harga</th>
+            {% if g.user['role'] == 'admin' %}<th>Aksi</th>{% endif %}
+        </tr>
+        {% for b in barang %}
+        <tr>
+            <td>{{ b['nama'] }}</td>
+            <td>{{ b['kategori'] }}</td>
+            <td>{{ b['stok'] }}</td>
+            <td>{{ b['satuan'] }}</td>
+            <td>Rp {{ "{:,.0f}".format(b['harga']) }}</td>
+            {% if g.user['role'] == 'admin' %}
+            <td>
+                <form class="inline" method="post" action="{{ url_for('hapus_barang', barang_id=b['id']) }}" onsubmit="return confirm('Hapus barang ini?')">
+                    <button class="danger" type="submit">Hapus</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Belum ada barang. Admin bisa menambahkan barang di atas.</td></tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+{% endblock %}

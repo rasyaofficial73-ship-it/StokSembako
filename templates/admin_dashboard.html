@@ -1,0 +1,37 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block content %}
+<h1>Dashboard Admin</h1>
+<p>Selamat datang, {{ current_user.nama }}.</p>
+
+<div class="cards">
+    <div class="stat-card"><span>Total jenis barang</span><strong>{{ total_barang }}</strong></div>
+    <div class="stat-card"><span>Stok menipis</span><strong>{{ stok_menipis }}</strong></div>
+    <div class="stat-card"><span>Stok habis</span><strong>{{ stok_habis }}</strong></div>
+    <div class="stat-card"><span>Akun pegawai</span><strong>{{ total_pegawai }}</strong></div>
+    <div class="stat-card"><span>Total pengeluaran</span><strong>Rp {{ "{:,.0f}".format(total_pengeluaran) }}</strong></div>
+</div>
+
+<h2>Transaksi stok terbaru</h2>
+<div class="table-wrap">
+<table>
+    <thead>
+        <tr><th>Tanggal</th><th>Barang</th><th>Jenis</th><th>Jumlah</th><th>Pegawai/Admin</th></tr>
+    </thead>
+    <tbody>
+    {% for t in transaksi_terbaru %}
+        <tr>
+            <td>{{ t.tanggal.strftime("%d-%m-%Y") }}</td>
+            <td>{{ t.barang.nama }}</td>
+            <td>{{ t.jenis|title }}</td>
+            <td>{{ t.jumlah }} {{ t.barang.satuan }}</td>
+            <td>{{ t.pengguna.nama }}</td>
+        </tr>
+    {% else %}
+        <tr><td colspan="5">Belum ada transaksi.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

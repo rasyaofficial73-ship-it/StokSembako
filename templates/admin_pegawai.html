@@ -1,0 +1,32 @@
+
+{% extends "admin_base.html" %}
+{% block title %}Data Pegawai{% endblock %}
+{% block content %}
+<h1>Manajemen Pegawai</h1>
+<p>Kelola akun pegawai yang dapat menggunakan sistem.</p>
+<a class="button" href="{{ url_for('admin_form_pegawai') }}">+ Buat Akun Pegawai</a>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Nama</th><th>Username</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody>
+{% for p in pegawai %}
+<tr>
+    <td>{{ p.nama }}</td>
+    <td>{{ p.username }}</td>
+    <td>{{ "Aktif" if p.aktif else "Nonaktif" }}</td>
+    <td>
+        <form method="POST" action="{{ url_for('admin_status_pegawai', user_id=p.id) }}">
+            <button class="{{ 'danger' if p.aktif else '' }}" type="submit">
+                {{ "Nonaktifkan" if p.aktif else "Aktifkan" }}
+            </button>
+        </form>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="4">Belum ada akun pegawai.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

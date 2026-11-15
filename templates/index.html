@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stok Sembako | Dashboard</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+    <div>
+        <h1>🏪 Stok Sembako</h1>
+        <p>Sistem Manajemen Persediaan Toko</p>
+    </div>
+    <a class="button secondary" href="{{ url_for('laporan') }}">
+        Lihat Laporan
+    </a>
+</header>
+
+<main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="notice {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <section class="stats">
+        <div class="stat-card">
+            <span>Jenis Barang</span>
+            <strong>{{ ringkasan.jenis }}</strong>
+        </div>
+        <div class="stat-card">
+            <span>Total Unit Stok</span>
+            <strong>{{ ringkasan.total_unit }}</strong>
+        </div>
+        <div class="stat-card warning-card">
+            <span>Stok Menipis</span>
+            <strong>{{ ringkasan.stok_rendah }}</strong>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>📦 Daftar Stok Barang</h2>
+
+        <form method="GET" action="{{ url_for('index') }}"
+              class="search-form">
+            <input type="text" name="cari"
+                   placeholder="Cari nama atau kode barang..."
+                   value="{{ cari }}">
+            <button type="submit">Cari</button>
+            <a class="button secondary" href="{{ url_for('index') }}">
+                Reset
+            </a>
+        </form>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Nama Barang</th>
+                        <th>Kategori</th>
+                        <th>Stok</th>
+                        <th>Harga Satuan</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for b in barang %}
+                    <tr>
+                        <td>{{ b.kode }}</td>
+                        <td><strong>{{ b.nama }}</strong></td>
+                        <td>{{ b.kategori }}</td>
+                        <td>{{ b.stok }} {{ b.satuan }}</td>
+                        <td>Rp {{ "{:,.0f}".format(b.harga) }}</td>
+                        <td>
+                            {% if b.stok == 0 %}
+                                <span class="badge danger">Habis</span>
+                            {% elif b.stok <= b.minimum %}
+                                <span class="badge warning">Menipis</span>
+                            {% else %}
+                                <span class="badge success">Aman</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST"
+                                  action="{{ url_for('hapus_barang', barang_id=b.id) }}"
+                                  onsubmit="return confirm('Hapus barang ini?')">
+                                <button class="danger-button"
+                                        type="submit">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7">Barang tidak ditemukan.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="forms-grid">
+        <div class="panel">
+            <h2>➕ Tambah Barang</h2>
+            <form method="POST" action="{{ url_for('tambah_barang') }}"
+                  class="form-grid">
+                <label>Kode barang
+                    <input name="kode" placeholder="S013" required>
+                </label>
+                <label>Nama barang
+                    <input name="nama" placeholder="Contoh: Kecap" required>
+                </label>
+                <label>Kategori
+                    <input name="kategori" value="Sembako" required>
+                </label>
+                <label>Satuan
+                    <input name="satuan" placeholder="kg, liter, bungkus"
+                           required>
+                </label>
+                <label>Stok awal
+                    <input type="number" name="stok" min="0" value="0"
+                           required>
+                </label>
+                <label>Batas minimum
+                    <input type="number" name="minimum" min="0" value="5"
+                           required>
+                </label>
+                <label>Harga satuan (Rp)
+                    <input type="number" name="harga" min="0" step="any"
+                           value="0" required>
+                </label>
+                <button type="submit">Simpan Barang</button>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>🔄 Transaksi Stok</h2>
+            <form method="POST" action="{{ url_for('transaksi_stok') }}"
+                  class="form-grid">
+                <label>Kode barang
+                    <input name="kode" placeholder="S001" required>
+                </label>
+                <label>Jenis transaksi
+                    <select name="jenis" required>
+                        <option value="Masuk">Barang Masuk</option>
+                        <option value="Keluar">Barang Keluar / Penjualan</option>
+                    </select>
+                </label>
+                <label>Jumlah
+                    <input type="number" name="jumlah" min="1" required>
+                </label>
+                <label>Keterangan
+                    <input name="keterangan"
+                           placeholder="Contoh: Pembelian dari pemasok">
+                </label>
+                <button type="submit">Simpan Transaksi</button>
+            </form>
+            <p class="hint">
+                Masukkan kode barang sesuai daftar. Stok otomatis
+                diperbarui setelah transaksi berhasil.
+            </p>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>🧾 Riwayat Transaksi Terbaru</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Barang</th>
+                        <th>Jenis</th>
+                        <th>Jumlah</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for t in transaksi %}
+                    <tr>
+                        <td>{{ t.waktu }}</td>
+                        <td>{{ t.nama }}</td>
+                        <td>{{ t.jenis }}</td>
+                        <td>{{ t.jumlah }} {{ t.satuan }}</td>
+                        <td>{{ t.keterangan or "-" }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">Belum ada transaksi.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer>
+    Sistem Stok Sembako · Dibuat dengan Python dan Flask
+</footer>
+</body>
+</html>
